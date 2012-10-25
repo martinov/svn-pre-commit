@@ -16,6 +16,10 @@ CHECK_DRUPAL_CS="/home/martin/shell_scripts/phpcs-svn-pre-commit\
 	--extensions=php,module,inc,install,test,profile,theme"
 CHECK_DRUPAL_CS_PROJECTS="/home/martin/shell_scripts/drupalcs-projects"
 CHECK_DRUPAL_CS_SKIP="/home/martin/shell_scripts/skip-keyword-svn-pre-commit"
+SVNLOOK=/usr/bin/svnlook
+
+# Check if there are changes in */sites/*/modules/[propeople|custom] directories.
+#CHANGED_DIRS=`${SVNLOOK} dirs-changed -t "${TXN}" "${REPOS}"`
 
 # Check log message for proper task/bug identification.
 if [ -x ${CHECK_LOG_MSG} ]; then
@@ -31,7 +35,6 @@ fi
 if [ `sed -n "/^${REPO_NAME}$/p" $CHECK_DRUPAL_CS_PROJECTS` ]; then
 	${CHECK_DRUPAL_CS_SKIP} "${REPOS}" "${TXN}"
 	if [ $? -ne 0 ]; then
-		echo "do check" 1>&2
 		$CHECK_DRUPAL_CS "$REPOS" -t "$TXN" >&2 || exit 1
 	fi
 fi
