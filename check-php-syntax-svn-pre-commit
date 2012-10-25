@@ -1,0 +1,27 @@
+#!/bin/bash
+
+REPOS="${1}"
+TXN="${2}"
+
+PHP="/usr/bin/php"
+SVNLOOK="/usr/bin/svnlook"
+AWK="/bin/awk"
+GREP="/bin/egrep"
+SED="/bin/sed"
+
+CHANGED=`${SVNLOOK} changed -t "${TXN}" "${REPOS}" | ${AWK} '{print $2}' | ${GREP} '\.(php|module)$'`
+for FILE in $CHANGED
+do
+    MESSAGE=`${SVNLOOK} cat -t "${TXN}" "${REPOS}" "${FILE}" | ${PHP} -l`
+    if [ $? -ne 0 ]
+    then
+        echo ""
+        echo "PHP error in: $FILE:"
+        echo `echo "$MESSAGE" | $SED "s| -| $FILE|g"`
+        echo ""
+        echo "Aww, naughty! Looks like somebody is not testing before commiting!"
+        exit 1
+    fi
+done
+
+exit 0

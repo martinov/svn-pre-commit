@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Propeople SVN pre commit hook
+# Martin Martinov / https://github.com/martinov/svn-pre-commit
+# Add -x to the first line of the script to debug.
+# Last change: 25.10.2012
+
+REPOS="$1"
+TXN="$2"
+REPO_NAME=`basename ${REPOS}`
+
+CHECK_LOG_MSG="/home/martin/shell_scripts/check-log-msg-svn-pre-commit"
+CHECK_PHP_SYNTAX="/home/martin/shell_scripts/check-php-syntax-svn-pre-commit"
+CHECK_DRUPAL_CS="/home/martin/shell_scripts/phpcs-svn-pre-commit\
+	--standard=/home/martin/coder/coder_sniffer/Drupal/ruleset.xml\
+	--extensions=php,module,inc,install,test,profile,theme"
+CHECK_DRUPAL_CS_PROJECTS="/home/martin/shell_scripts/drupalcs-projects"
+CHECK_DRUPAL_CS_SKIP="/home/martin/shell_scripts/skip-keyword-svn-pre-commit"
+
+# Check log message for proper task/bug identification.
+if [ -x ${CHECK_LOG_MSG} ]; then
+	${CHECK_LOG_MSG} "${REPOS}" "${TXN}" 1>&2 || exit 1
+fi
+
+# Check PHP files for syntax errors.
+if [ -x ${CHECK_PHP_SYNTAX} ]; then
+	${CHECK_PHP_SYNTAX} "${REPOS}" "${TXN}" 1>&2 || exit 1
+fi
+
+# Check for Drupal Coding Standards.
+if [ `sed -n "/^${REPO_NAME}$/p" $CHECK_DRUPAL_CS_PROJECTS` ]; then
+	${CHECK_DRUPAL_CS_SKIP} "${REPOS}" "${TXN}"
+	if [ $? -ne 0 ]; then
+		echo "do check" 1>&2
+		$CHECK_DRUPAL_CS "$REPOS" -t "$TXN" >&2 || exit 1
+	fi
+fi
+
+exit 0

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+REPOS="${1}"
+TXN="${2}"
+
+SVNLOOK=/usr/bin/svnlook
+
+LOG_MSG=`${SVNLOOK} log -t "${TXN}" "${REPOS}"`
+
+if (echo "${LOG_MSG}" | grep '%NOCS' > /dev/null;); then
+  exit 0
+else
+  exit 1
+fi
